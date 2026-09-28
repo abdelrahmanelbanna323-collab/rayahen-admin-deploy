@@ -145,6 +145,15 @@ function DashboardContent({ user, onLogout }: { user: string; onLogout: () => vo
 
             
 
+            <button
+              onClick={handleManualSync}
+              disabled={lastSyncStatus === 'syncing'}
+              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50 w-full col-span-2 sm:col-span-1"
+            >
+              <span>{lastSyncStatus === 'syncing' ? '⌛' : '☁️'}</span>
+              <span>{lastSyncStatus === 'syncing' ? 'جاري المزامنة...' : 'مزامنة السحابة'}</span>
+            </button>
+
             {/* Copy Branch Settings Button */}
             <button
               onClick={() => { setCopySource('fawzy-moaz'); setCopyTargets([]); setShowCopyModal(true); }}

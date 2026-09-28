@@ -568,7 +568,15 @@ const executeSyncToFirestore = async (
       settings: settingsPayload,
     };
 
-    await setDoc(doc(db, 'menu_state', 'global'), stateData);
+        const promises = [
+      setDoc(doc(db, 'menu_state', 'global'), stateData),
+      setDoc(doc(db, 'menu_state', 'menuItems'), { data: menuItemsPayload.data, updatedAt }),
+      setDoc(doc(db, 'menu_state', 'categories'), { data: categoriesPayload.data, updatedAt }),
+      setDoc(doc(db, 'menu_state', 'promotions'), { data: promotionsPayload.data, updatedAt }),
+      setDoc(doc(db, 'menu_state', 'announcements'), { data: announcementsPayload.data, updatedAt }),
+      setDoc(doc(db, 'menu_state', 'settings'), settingsPayload)
+    ];
+    await Promise.all(promises);
     console.log('🔥 Synced to Firestore successfully at', updatedAt);
     setStatus?.('success');
   } catch (err: any) {
