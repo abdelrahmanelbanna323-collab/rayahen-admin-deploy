@@ -36,17 +36,14 @@ function DashboardContent({ user, onLogout }: { user: string; onLogout: () => vo
   const adminUsers = useMenuStore((state) => state.adminUsers);
   const ratingUrl = useMenuStore((state) => state.ratingUrl);
   const setRatingUrl = useMenuStore((state) => state.setRatingUrl);
-  const syncToFirebase = useMenuStore((state) => state.syncToFirebase);
-  const initFirebaseListener = useMenuStore((state) => state.initFirebaseListener);
+  const syncToSupabase = useMenuStore((state) => state.syncToSupabase);
+  const initSupabaseListener = useMenuStore((state) => state.initSupabaseListener);
   const lastSyncStatus = useMenuStore((state) => state.lastSyncStatus);
   const lastSyncError = useMenuStore((state) => state.lastSyncError);
   const adminBranch = useMenuStore((state) => state.adminBranch);
   const setAdminBranch = useMenuStore((state) => state.setAdminBranch);
-  const vatSettings = useMenuStore((state) => state.vatSettings);
-  const setVatSetting = useMenuStore((state) => state.setVatSetting);
 
   const clearAllData = useMenuStore((state) => state.clearAllData);
-  const resetToDefaults = useMenuStore((state) => state.resetToDefaults);
 
   const [inputRatingUrl, setInputRatingUrl] = useState(ratingUrl || '');
   const [savedMsg, setSavedMsg] = useState(false);
@@ -78,9 +75,9 @@ function DashboardContent({ user, onLogout }: { user: string; onLogout: () => vo
   };
 
   useEffect(() => {
-    const cleanup = initFirebaseListener();
+    const cleanup = initSupabaseListener();
     return cleanup || undefined;
-  }, [initFirebaseListener]);
+  }, [initSupabaseListener]);
 
   const activePromosCount = promotions.filter((p) => p.isActive).length;
 
@@ -92,7 +89,7 @@ function DashboardContent({ user, onLogout }: { user: string; onLogout: () => vo
   };
 
   const handleManualSync = async () => {
-    await syncToFirebase();
+    await syncToSupabase();
   };
 
   return (
@@ -152,16 +149,7 @@ function DashboardContent({ user, onLogout }: { user: string; onLogout: () => vo
               <span>{lastSyncStatus === 'syncing' ? 'جاري المزامنة...' : 'مزامنة السحابة'}</span>
             </button>
 
-            <button
-              onClick={() => {
-                if (confirm('استعادة البيانات الافتراضية للمنيو والعروض والمنشورات؟')) {
-                  resetToDefaults();
-                }
-              }}
-              className="bg-brand-gold/10 hover:bg-brand-gold/20 text-brand-gold border border-brand-gold/30 px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center w-full"
-            >
-              🔄 استعادة
-            </button>
+
 
             {/* Copy Branch Settings Button */}
             <button
@@ -186,15 +174,15 @@ function DashboardContent({ user, onLogout }: { user: string; onLogout: () => vo
       {/* Cloud Sync Status Feedback */}
       {lastSyncStatus === 'success' && (
         <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 px-4 py-3 rounded-xl text-xs font-bold mb-6 flex items-center gap-2 shadow-sm animate-in fade-in">
-          <span>✅ تم حفظ البيانات في السحابة (Firebase) بنجاح! ستظهر في المنيو للعملاء فوراً.</span>
+          <span>✅ تم حفظ البيانات في السحابة (Supabase) بنجاح! ستظهر في المنيو للعملاء فوراً.</span>
         </div>
       )}
       {lastSyncStatus === 'error' && (
         <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-xl text-xs font-bold mb-6 flex flex-col gap-1 shadow-sm animate-in fade-in">
           <div className="flex items-center gap-2">
-            <span>❌ حدث خطأ أثناء الحفظ في السحابة (Firebase):</span>
+            <span>❌ حدث خطأ أثناء الحفظ في السحابة (Supabase):</span>
           </div>
-          <p className="font-mono text-[11px] bg-red-100 p-2 rounded border border-red-200 mt-1">{lastSyncError || 'تأكد من إعدادات Firebase أو صلاحيات الـ Rules'}</p>
+          <p className="font-mono text-[11px] bg-red-100 p-2 rounded border border-red-200 mt-1">{lastSyncError || 'تأكد من إعدادات Supabase أو صلاحيات الـ Rules'}</p>
         </div>
       )}
 
@@ -243,67 +231,6 @@ function DashboardContent({ user, onLogout }: { user: string; onLogout: () => vo
             </button>
           </div>
         </form>
-      </div>
-
-      {/* VAT Settings Box */}
-      <div className="bg-white border border-brand-gold/20 p-4 md:p-5 rounded-2xl mb-8 shadow-sm">
-        <div className="flex items-center gap-2 mb-3">
-          <span>🧾</span>
-          <h4 className="font-bold text-soft-charcoal text-sm">إعدادات القيمة المضافة — VAT 14%</h4>
-        </div>
-        <p className="text-[11px] text-gray-500 mb-4">فعّل عرض &quot;يضاف 14% ضريبة&quot; تحت السعر لكل بند في فرع معين. يظهر للزبائن في المنيو فوراً.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {(() => {
-            const enabledAll = vatSettings['all'] ?? false;
-            return (
-              <button
-                key="all"
-                onClick={() => setVatSetting('all', !enabledAll)}
-                className={`col-span-2 sm:col-span-3 md:col-span-4 flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all shadow-2xs ${
-                  enabledAll
-                    ? 'bg-brand-gold/15 border-brand-gold text-brand-gold'
-                    : 'bg-amber-50/60 border-amber-200/80 text-gray-700'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span>🌐</span>
-                  <span>المنيو العام الرئيسي (الكل / All Branches)</span>
-                </div>
-                <span className={`w-8 h-4 rounded-full transition-all relative ${
-                  enabledAll ? 'bg-brand-gold' : 'bg-gray-300'
-                }`}>
-                  <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${
-                    enabledAll ? 'right-0.5' : 'left-0.5'
-                  }`} />
-                </span>
-              </button>
-            );
-          })()}
-          {AVAILABLE_BRANCHES.map(branch => {
-            const isSharm = branch.id.startsWith('sharm');
-            const enabled = vatSettings[branch.id] ?? false;
-            return (
-              <button
-                key={branch.id}
-                onClick={() => setVatSetting(branch.id, !enabled)}
-                className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${
-                  enabled
-                    ? 'bg-brand-gold/10 border-brand-gold text-brand-gold'
-                    : 'bg-gray-50 border-gray-200 text-gray-500'
-                }`}
-              >
-                <span>{isSharm ? '🏖️' : '🏙️'} {branch.name}</span>
-                <span className={`w-8 h-4 rounded-full transition-all relative ${
-                  enabled ? 'bg-brand-gold' : 'bg-gray-300'
-                }`}>
-                  <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${
-                    enabled ? 'right-0.5' : 'left-0.5'
-                  }`} />
-                </span>
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {/* Metric Cards (Responsive Grid: 2 cols on mobile, 3 on tablet, 5 on desktop) */}
