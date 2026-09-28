@@ -1,0 +1,52 @@
+{
+  "name": "إدارة رياحين الإسكندرية - لوحة التحكم",
+  "short_name": "إدارة رياحين",
+  "description": "نظام إدارة المنيو والعروض لرياحين الإسكندرية",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FAF8F3",
+  "theme_color": "#FAF8F3",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192-v2.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512-v2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "لوحة التحكم",
+      "short_name": "الداشبورد",
+      "description": "الصفحة الرئيسية للإدارة",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/icon-192-v2.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "منيو العملاء",
+      "short_name": "المنيو",
+      "description": "فتح منيو العملاء المنفصل",
+      "url": "https://rayahen-menu.vercel.app/",
+      "icons": [
+        {
+          "src": "/icon-192-v2.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

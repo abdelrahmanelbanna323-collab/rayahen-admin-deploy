@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand Colors from new logo */
+  --color-brand-gold:        #B38E5D;
+  --color-brand-gold-light:  #CBAE82;
+  --color-brand-gold-muted:  #D4C1A5;
+  --color-brand-brown:       #6E5A47;
+  --color-brand-brown-dark:  #4A3C2A;
+  
+  /* Bright Clean Backgrounds */
+  --color-pearl-white:       #FAFAFA;
+  --color-pearl-card:        #FFFFFF;
+  --color-pearl-warm:        #F5F5F5;
+  
+  /* Text */
+  --color-soft-charcoal:     #333333;
+  --color-text-muted:        #888888;
+  
+  --font-outfit:  'Outfit', system-ui, -apple-system, sans-serif;
+  --font-cairo:   'Cairo', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: var(--font-cairo), var(--font-outfit), 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body:    var(--font-cairo), var(--font-outfit), 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--color-pearl-white);
+    color: var(--color-brand-brown-dark);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(179, 142, 93, 0.3); border-radius: 99px; }
+
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  ::selection { background: var(--color-brand-gold-muted); color: #fff; }
+}
+
+@layer utilities {
+  .card-soft-3d {
+    background: #FFFFFF;
+    border-radius: 24px;
+    box-shadow: 
+      12px 12px 24px rgba(210, 210, 210, 0.4),
+      -12px -12px 24px rgba(255, 255, 255, 1);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .card-soft-3d:hover {
+    box-shadow: 
+      16px 16px 32px rgba(210, 210, 210, 0.5),
+      -16px -16px 32px rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+  }
+
+  .btn-soft-3d {
+    background: linear-gradient(145deg, #ffffff, #e6e6e6);
+    box-shadow:  
+      5px 5px 10px #d9d9d9,
+      -5px -5px 10px #ffffff;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-soft-3d:active {
+    box-shadow: 
+      inset 5px 5px 10px #d9d9d9,
+      inset -5px -5px 10px #ffffff;
+  }
+
+  .btn-gold-3d {
+    background: linear-gradient(145deg, #CBAE82, #B38E5D);
+    box-shadow:  
+      5px 5px 15px rgba(179, 142, 93, 0.3),
+      -5px -5px 10px rgba(255, 255, 255, 0.8);
+    color: white;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255,255,255,0.4);
+  }
+
+  .btn-gold-3d:active {
+    box-shadow: 
+      inset 5px 5px 10px rgba(100, 80, 50, 0.2),
+      inset -5px -5px 10px rgba(255, 255, 255, 0.4);
+    transform: scale(0.97);
+  }
+
+  .glass-light {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+  }
+
+  .text-gold-gradient {
+    background: linear-gradient(135deg, #B38E5D, #D4C1A5, #B38E5D);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* Keyframe Animations */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(0.98); }
+}
+
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+.animate-float-soft { animation: float-soft 4s ease-in-out infinite; }
+.animate-slide-up   { animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
