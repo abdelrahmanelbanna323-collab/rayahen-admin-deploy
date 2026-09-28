@@ -963,7 +963,9 @@ if (typeof window !== 'undefined') {
     prevFingerprint = fp;
     clearTimeout(autoSyncTimeout);
     autoSyncTimeout = setTimeout(() => {
-      syncStateToFirestore(useMenuStore.getState()).catch((e: any) => console.error('auto-sync error:', e));
+      const st = useMenuStore.getState();
+      if (!st.isFirebaseSynced) return;
+      syncStateToFirestore(st).catch(e => console.error(e));
     }, 800);
   });
 }
