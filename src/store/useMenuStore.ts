@@ -531,13 +531,7 @@ const sanitize = <T>(obj: T): T => {
         .map(([k, v]) => [k, sanitize(v)])
     ) as T;
   }
-  if (typeof obj === 'string') {
-    // Prevent any base64/blob strings from ever entering Firestore
-    if (obj.startsWith('data:') || obj.startsWith('blob:')) {
-      console.warn('⚠️ Prevented base64/blob string from being sent to Firestore:', obj.substring(0, 30));
-      return '' as unknown as T;
-    }
-  }
+  
   return obj;
 };
 
@@ -569,7 +563,6 @@ const executeSyncToFirestore = async (
     };
 
         const promises = [
-      setDoc(doc(db, 'menu_state', 'global'), stateData),
       setDoc(doc(db, 'menu_state', 'menuItems'), { data: menuItemsPayload.data, updatedAt }),
       setDoc(doc(db, 'menu_state', 'categories'), { data: categoriesPayload.data, updatedAt }),
       setDoc(doc(db, 'menu_state', 'promotions'), { data: promotionsPayload.data, updatedAt }),
@@ -645,39 +638,69 @@ export const useMenuStore = create<MenuStoreState>()(
         if (get().unsubListeners) return get().unsubListeners!;
 
         try {
-          const docRef = doc(db, 'menu_state', 'global');
+          const unsubFns: (() => void)[] = [];
 
-          const applyData = (data: any) => {
-            if (!data) return;
-            if (data.categories?.data) set({ categories: data.categories.data, isFirebaseSynced: true });
-            if (data.promotions?.data) set({ promotions: data.promotions.data });
-            if (data.announcements?.data) set({ announcements: data.announcements.data });
-            if (data.settings) {
-              set({
-                adminUsers: data.settings.adminUsers || get().adminUsers,
-                ratingUrl: data.settings.ratingUrl || get().ratingUrl,
-                vatSettings: data.settings.vatSettings || get().vatSettings || {},
-              });
-            }
-            const serverTimestamp = data.settings?.updatedAt ? new Date(data.settings.updatedAt).getTime() : 0;
-            const localTimestamp = get().lastItemsUpdatedAt || 0;
-            if (get().menuItems.length === 0 || serverTimestamp > localTimestamp) {
-              if (data.menuItems?.data) {
-                const items = data.menuItems.data as MenuItem[];
-                items.sort((a: any, b: any) => (a.orderIndex ?? 99999) - (b.orderIndex ?? 99999));
-                set({ menuItems: items, lastItemsUpdatedAt: serverTimestamp });
+          // -- menuItems listener
+          unsubFns.push(
+            onSnapshot(doc(db, 'menu_state', 'menuItems'), (snap) => {
+              if (!snap.exists()) return;
+              const data = snap.data();
+              const serverTimestamp = data?.updatedAt ? new Date(data.updatedAt).getTime() : 0;
+              const localTimestamp = get().lastItemsUpdatedAt || 0;
+              if (get().menuItems.length === 0 || serverTimestamp > localTimestamp) {
+                if (data?.data) {
+                  const items = data.data as MenuItem[];
+                  items.sort((a: any, b: any) => (a.orderIndex ?? 99999) - (b.orderIndex ?? 99999));
+                  set({ menuItems: items, lastItemsUpdatedAt: serverTimestamp, isFirebaseSynced: true });
+                }
               }
-            }
-          };
+            }, (e) => console.log('menuItems listener error, local mode active.', e))
+          );
 
-          const unsub = onSnapshot(docRef, (snap) => {
-            if (snap.exists()) applyData(snap.data());
-          }, (e) => {
-            console.log('Firestore listener error, local mode active.', e);
-          });
+          // -- categories listener
+          unsubFns.push(
+            onSnapshot(doc(db, 'menu_state', 'categories'), (snap) => {
+              if (!snap.exists()) return;
+              const data = snap.data();
+              if (data?.data) set({ categories: data.data, isFirebaseSynced: true });
+            }, (e) => console.log('categories listener error, local mode active.', e))
+          );
+
+          // -- promotions listener
+          unsubFns.push(
+            onSnapshot(doc(db, 'menu_state', 'promotions'), (snap) => {
+              if (!snap.exists()) return;
+              const data = snap.data();
+              if (data?.data) set({ promotions: data.data });
+            }, (e) => console.log('promotions listener error, local mode active.', e))
+          );
+
+          // -- announcements listener
+          unsubFns.push(
+            onSnapshot(doc(db, 'menu_state', 'announcements'), (snap) => {
+              if (!snap.exists()) return;
+              const data = snap.data();
+              if (data?.data) set({ announcements: data.data });
+            }, (e) => console.log('announcements listener error, local mode active.', e))
+          );
+
+          // -- settings listener
+          unsubFns.push(
+            onSnapshot(doc(db, 'menu_state', 'settings'), (snap) => {
+              if (!snap.exists()) return;
+              const data = snap.data();
+              if (data) {
+                set({
+                  adminUsers: data.adminUsers || get().adminUsers,
+                  ratingUrl: data.ratingUrl || get().ratingUrl,
+                  vatSettings: data.vatSettings || get().vatSettings || {},
+                });
+              }
+            }, (e) => console.log('settings listener error, local mode active.', e))
+          );
 
           const cleanup = () => {
-            unsub();
+            unsubFns.forEach((fn) => fn());
             set({ unsubListeners: null });
           };
 

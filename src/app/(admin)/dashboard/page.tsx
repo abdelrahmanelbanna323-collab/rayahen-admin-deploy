@@ -8,6 +8,7 @@ import CategoriesManager from '@/components/admin/CategoriesManager';
 import AnnouncementsManager from '@/components/admin/AnnouncementsManager';
 import UsersManager from '@/components/admin/UsersManager';
 import ActivityLogsManager from '@/components/admin/ActivityLogsManager';
+import GlobalTranslateButton from '@/components/admin/GlobalTranslateButton';
 import InstallPWAButton from '@/components/InstallPWAButton';
 import { useMenuStore } from '@/store/useMenuStore';
 import { AVAILABLE_BRANCHES } from '@/types';
@@ -144,6 +145,8 @@ function DashboardContent({ user, onLogout }: { user: string; onLogout: () => vo
             </a>
 
             
+
+            <GlobalTranslateButton />
 
             <button
               onClick={handleManualSync}
