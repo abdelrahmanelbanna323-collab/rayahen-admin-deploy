@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useMenuStore } from '@/store/useMenuStore';
-import { translateBatch, Lang } from '@/lib/autoTranslate';
+import { batchTranslate } from '@/lib/autoTranslate';
+import type { Lang } from '@/lib/translations';
 
 export default function GlobalTranslateButton() {
   const [isTranslating, setIsTranslating] = useState(false);
@@ -18,19 +19,40 @@ export default function GlobalTranslateButton() {
     setProgress('جاري الترجمة...');
 
     try {
-      const langsToTranslate: Lang[] = ['EN', 'IT', 'RU'];
       let changesMade = false;
+
+      // Helper to do translation for one entity
+      const translateFields = async (text: string, currentEn: any, currentIt: any, currentRu: any) => {
+        let en = currentEn; let it = currentIt; let ru = currentRu;
+        let changed = false;
+        
+        if (text && !en) {
+          const res = await batchTranslate([text], 'EN');
+          en = res[0] || text; changed = true;
+        }
+        if (text && !it) {
+          const res = await batchTranslate([text], 'IT');
+          it = res[0] || text; changed = true;
+        }
+        if (text && !ru) {
+          const res = await batchTranslate([text], 'RU');
+          ru = res[0] || text; changed = true;
+        }
+        
+        return { en, it, ru, changed };
+      };
 
       // 1. Categories
       const newCategories = [...categories];
       for (let i = 0; i < newCategories.length; i++) {
         const cat = newCategories[i];
         if (cat.nameAr && (!cat.nameEn || !cat.nameIt || !cat.nameRu)) {
-          const reqs = langsToTranslate.map(l => ({ text: cat.nameAr, lang: l }));
-          const results = await translateBatch(reqs);
-          if (results[0] && !cat.nameEn) { cat.nameEn = results[0]; changesMade = true; }
-          if (results[1] && !cat.nameIt) { cat.nameIt = results[1]; changesMade = true; }
-          if (results[2] && !cat.nameRu) { cat.nameRu = results[2]; changesMade = true; }
+          setProgress(`جاري ترجمة القسم: ${cat.nameAr}`);
+          const { en, it, ru, changed } = await translateFields(cat.nameAr, cat.nameEn, cat.nameIt, cat.nameRu);
+          if (changed) {
+            cat.nameEn = en; cat.nameIt = it; cat.nameRu = ru;
+            changesMade = true;
+          }
         }
       }
       if (changesMade) useMenuStore.setState({ categories: newCategories });
@@ -40,35 +62,18 @@ export default function GlobalTranslateButton() {
       let itemChanges = false;
       for (let i = 0; i < newMenuItems.length; i++) {
         const item = newMenuItems[i];
-        const reqs = [];
         
         // Name
         if (item.nameAr && (!item.nameEn || !item.nameIt || !item.nameRu)) {
-          langsToTranslate.forEach(l => reqs.push({ text: item.nameAr, lang: l, key: 'name', itemIndex: i }));
+          setProgress(`جاري ترجمة الصنف: ${item.nameAr}`);
+          const { en, it, ru, changed } = await translateFields(item.nameAr, item.nameEn, item.nameIt, item.nameRu);
+          if (changed) { item.nameEn = en; item.nameIt = it; item.nameRu = ru; itemChanges = true; }
         }
         // Description
         if (item.descriptionAr && (!item.descriptionEn || !item.descriptionIt || !item.descriptionRu)) {
-          langsToTranslate.forEach(l => reqs.push({ text: item.descriptionAr, lang: l, key: 'desc', itemIndex: i }));
-        }
-        
-        if (reqs.length > 0) {
-           const texts = reqs.map(r => ({ text: r.text, lang: r.lang }));
-           setProgress(`جاري ترجمة الصنف: ${item.nameAr}`);
-           const results = await translateBatch(texts);
-           results.forEach((res, idx) => {
-             const r = reqs[idx];
-             if (r.key === 'name') {
-               if (r.lang === 'EN') item.nameEn = res;
-               if (r.lang === 'IT') item.nameIt = res;
-               if (r.lang === 'RU') item.nameRu = res;
-               itemChanges = true;
-             } else {
-               if (r.lang === 'EN') item.descriptionEn = res;
-               if (r.lang === 'IT') item.descriptionIt = res;
-               if (r.lang === 'RU') item.descriptionRu = res;
-               itemChanges = true;
-             }
-           });
+          setProgress(`جاري ترجمة وصف: ${item.nameAr}`);
+          const { en, it, ru, changed } = await translateFields(item.descriptionAr, item.descriptionEn, item.descriptionIt, item.descriptionRu);
+          if (changed) { item.descriptionEn = en; item.descriptionIt = it; item.descriptionRu = ru; itemChanges = true; }
         }
       }
       if (itemChanges) {
@@ -76,8 +81,45 @@ export default function GlobalTranslateButton() {
         changesMade = true;
       }
 
+      // 3. Promotions
+      const newPromos = [...promotions];
+      let promoChanges = false;
+      for (let i = 0; i < newPromos.length; i++) {
+        const p = newPromos[i];
+        if (p.titleAr && (!p.titleEn || !p.titleIt || !p.titleRu)) {
+          setProgress(`جاري ترجمة العرض: ${p.titleAr}`);
+          const { en, it, ru, changed } = await translateFields(p.titleAr, p.titleEn, p.titleIt, p.titleRu);
+          if (changed) { p.titleEn = en; p.titleIt = it; p.titleRu = ru; promoChanges = true; }
+        }
+      }
+      if (promoChanges) {
+        useMenuStore.setState({ promotions: newPromos });
+        changesMade = true;
+      }
+
+      // 4. Announcements
+      const newAnns = [...announcements];
+      let annChanges = false;
+      for (let i = 0; i < newAnns.length; i++) {
+        const p = newAnns[i];
+        if (p.titleAr && (!p.titleEn || !(p as any).titleIt || !(p as any).titleRu)) {
+          setProgress(`جاري ترجمة عنوان الإعلان: ${p.titleAr}`);
+          const { en, it, ru, changed } = await translateFields(p.titleAr, p.titleEn, (p as any).titleIt, (p as any).titleRu);
+          if (changed) { p.titleEn = en; (p as any).titleIt = it; (p as any).titleRu = ru; annChanges = true; }
+        }
+        if (p.contentAr && (!p.contentEn || !(p as any).contentIt || !(p as any).contentRu)) {
+          setProgress(`جاري ترجمة محتوى الإعلان: ${p.titleAr}`);
+          const { en, it, ru, changed } = await translateFields(p.contentAr, p.contentEn, (p as any).contentIt, (p as any).contentRu);
+          if (changed) { p.contentEn = en; (p as any).contentIt = it; (p as any).contentRu = ru; annChanges = true; }
+        }
+      }
+      if (annChanges) {
+        useMenuStore.setState({ announcements: newAnns });
+        changesMade = true;
+      }
+
       if (changesMade) {
-        setProgress('جاري الحفظ...');
+        setProgress('جاري الحفظ والسحابة...');
         await syncToFirebase();
         setProgress('تمت الترجمة والحفظ بنجاح!');
       } else {
