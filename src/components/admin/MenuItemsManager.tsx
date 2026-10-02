@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { useMenuStore } from '@/store/useMenuStore';
 import { MenuItem, AVAILABLE_BRANCHES } from '@/types';
 import { optimizeImage } from '@/lib/imageOptimizer';
-import { uploadToSupabase } from '@/lib/supabaseClient';
+import { uploadToFirebaseStorage } from '@/lib/firebaseUpload';
 
 export default function MenuItemsManager() {
   const menuItems = useMenuStore((state) => state.menuItems);
@@ -127,7 +127,7 @@ export default function MenuItemsManager() {
     try {
       const optimizedBlob = await optimizeImage(file);
       
-      const downloadUrl = await uploadToSupabase(optimizedBlob);
+      const downloadUrl = await uploadToFirebaseStorage(optimizedBlob);
       if (!downloadUrl) throw new Error("Upload failed");
       
       URL.revokeObjectURL(localUrl);

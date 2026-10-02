@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef } from 'react';
 import { useMenuStore, AnnouncementPost } from '@/store/useMenuStore';
-import { uploadToSupabase } from '@/lib/supabaseClient';
+import { uploadToFirebaseStorage } from '@/lib/firebaseUpload';
 
 export default function AnnouncementsManager() {
   const adminBranch = useMenuStore((state) => state.adminBranch);
@@ -171,7 +171,7 @@ export default function AnnouncementsManager() {
     try {
       const uploadFile = isVideoFile ? file : new File([await optimizeImage(file)], file.name || 'image.jpg', { type: 'image/jpeg' });
       
-      const mediaUrl = await uploadToSupabase(uploadFile);
+      const mediaUrl = await uploadToFirebaseStorage(uploadFile);
       if (mediaUrl) {
         setImagePreview(mediaUrl);
       } else {

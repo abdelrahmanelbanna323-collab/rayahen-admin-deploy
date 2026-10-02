@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useMenuStore, CategoryItem } from '@/store/useMenuStore';
 import { optimizeImage } from '@/lib/imageOptimizer';
-import { uploadToSupabase } from '@/lib/supabaseClient';
+import { uploadToFirebaseStorage } from '@/lib/firebaseUpload';
 
 export default function CategoriesManager() {
   const adminBranch = useMenuStore((state) => state.adminBranch);
@@ -77,7 +77,7 @@ export default function CategoriesManager() {
 
     try {
       const optimizedBlob = await optimizeImage(file);
-      const downloadUrl = await uploadToSupabase(optimizedBlob);
+      const downloadUrl = await uploadToFirebaseStorage(optimizedBlob);
       if (!downloadUrl) throw new Error("Upload failed");
       
       URL.revokeObjectURL(localUrl);
